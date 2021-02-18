@@ -88,6 +88,34 @@ class SubcommandsTests {
     }
 
     @Test
+    fun testStrictSubcommandOptionsOrder() {
+        val argParser = ArgParser("testParser", strictSubcommandOptionsOrder = true)
+        argParser.option(ArgType.String, "output", "o", "Output file")
+        class Summary: Subcommand("summary", "Calculate summary") {
+            val invert by option(ArgType.Boolean, "invert", "i", "Invert results")
+            val addendums by argument(ArgType.Int, "addendums", description = "Addendums").vararg()
+            var result: Int = 0
+
+            override fun execute() {
+                result = addendums.sum()
+                result = if (invert!!) -1 * result else result
+            }
+        }
+        val action = Summary()
+        argParser.subcommands(action)
+        assertFailsWith(IllegalStateException::class) {
+            argParser.parse(arrayOf("summary", "-o", "out.txt", "-i", "2", "3", "5"))
+        }
+        val argParserStrict = ArgParser("testParser", strictSubcommandOptionsOrder = true)
+        val actionStrict = Summary()
+        val outputValis by argParserStrict.option(ArgType.String, "output", "o", "Output file")
+        argParserStrict.subcommands(actionStrict)
+        argParserStrict.parse(arrayOf("-o", "out.txt", "summary", "-i", "2", "3", "5"))
+        assertEquals("out.txt", outputValis)
+        assertEquals(-10, actionStrict.result)
+    }
+
+    @Test
     fun testCommonOptions() {
         abstract class CommonOptions(name: String, actionDescription: String): Subcommand(name, actionDescription) {
             val numbers by argument(ArgType.Int, "numbers", description = "Numbers").vararg()
