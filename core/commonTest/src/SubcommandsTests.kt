@@ -33,7 +33,7 @@ class SubcommandsTests {
 
     @Test
     fun testStrictSubcommandOptionsOrder() {
-        val argParserStrictFail = ArgParser("testParser", strictSubcommandOptionsOrder = true).avoidProcessExit()
+        val argParserStrictFail = ArgParser("testParser", strictSubcommandOptionsOrder = true)
         argParserStrictFail.option(ArgType.String, "output", "o", "Output file")
         class Summary: Subcommand("summary", "Calculate summary") {
             val invert by option(ArgType.Boolean, "invert", "i", "Invert results")
@@ -57,33 +57,6 @@ class SubcommandsTests {
         argParserStrict.parse(arrayOf("-o", "out.txt", "summary", "-i", "2", "3", "5"))
         assertEquals("out.txt", outputValid)
         assertEquals("CSV", defaultOption)
-        assertEquals(-10, action.result)
-    }
-
-    @Test
-    fun testStrictSubcommandOptionsOrder() {
-        val argParserStrictFail = ArgParser("testParser", strictSubcommandOptionsOrder = true)
-        argParserStrictFail.option(ArgType.String, "output", "o", "Output file")
-        class Summary: Subcommand("summary", "Calculate summary") {
-            val invert by option(ArgType.Boolean, "invert", "i", "Invert results")
-            val addendums by argument(ArgType.Int, "addendums", description = "Addendums").vararg()
-            var result: Int = 0
-
-            override fun execute() {
-                result = addendums.sum()
-                result = if (invert!!) -1 * result else result
-            }
-        }
-        argParserStrictFail.subcommands(Summary())
-        assertFailsWith(IllegalStateException::class) {
-            argParserStrictFail.parse(arrayOf("summary", "-i", "2", "3", "5", "-o", "out.txt"))
-        }
-        val argParserStrict = ArgParser("testParser", strictSubcommandOptionsOrder = true)
-        val action = Summary()
-        val outputValis by argParserStrict.option(ArgType.String, "output", "o", "Output file")
-        argParserStrict.subcommands(action)
-        argParserStrict.parse(arrayOf("-o", "out.txt", "summary", "-i", "2", "3", "5"))
-        assertEquals("out.txt", outputValis)
         assertEquals(-10, action.result)
     }
 
